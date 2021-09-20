@@ -1,6 +1,6 @@
-# Implementing a Hospital Database PSQL using Simulated Data
+# Implementing a Hospital Database PSQL & Neo4j using Simulated Data
 
-In this project I implementing a database for SmallTown Hospital, a local hypothetical hospital in my town using data generated with python.
+In this project I implementing a database for SmallTown Hospital, a local hypothetical hospital in my town using data generated with python first in pSQL then in Neo4j.
 
 ## Schema
 A Doctor has a name and sees many Patients
