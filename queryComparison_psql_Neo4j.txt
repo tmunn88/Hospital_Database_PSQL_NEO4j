@@ -1,0 +1,80 @@
+
+For visual representation I have included the input and output for both
+psql and neo4j queries to obtain all of a patient's info. In both databases,
+I simply queried by patient's ssn.
+
+In general, it is much faster to write and understand the Output
+of the cypher query. The psql query required 24 lines of code and generated a
+table that had each illness and treatment listed for each doctor that treated
+the patient (e.g. similar to duplications you see in any lookup table).
+
+The cypher Query only took 2 lines! And with the output there are no duplications
+of the illnesses and treatments per doctor (like in a lookup table).
+Thus, the output is cleaner and easier to understand.
+
+
+//psql Query Input
+--Query showing an all info for an individual patient
+SELECT
+    p.ssn as p_ssn,
+    p.first_name as p_firstname,
+    p.last_name as p_lastname,
+    d.first_name as doc_firstname,
+    d.last_name as doc_lastname,
+    i.ill_name as illness_name,
+    t.treat_name as treatment_name
+FROM
+    patient p,
+    patient_doctor pd,
+    patient_illness pi,
+    patient_treatment pt,
+    doctor d,
+    illness i,
+    treatment t
+WHERE
+    p.ssn= '076-94-2856' and
+    p.id = pd.p_id and
+    p.id = pi.p_id and
+    p.id = pt.p_id and
+    pd.d_id = d.id and
+    pi.ill_id = i.id and
+    pt.treat_id = t.id;
+
+
+//psql Query Output
+p_ssn    | p_firstname | p_lastname | doc_firstname | doc_lastname | illness_name | treatment_name
+-------------+-------------+------------+---------------+--------------+--------------+----------------
+883-02-1677 | Debra       | Bennett    | Cathy         | Long         | slice        | jaw
+883-02-1677 | Debra       | Bennett    | Louis         | Hartman      | slice        | jaw
+883-02-1677 | Debra       | Bennett    | Cathy         | Long         | copy         | jaw
+883-02-1677 | Debra       | Bennett    | Louis         | Hartman      | copy         | jaw
+883-02-1677 | Debra       | Bennett    | Cathy         | Long         | red          | jaw
+883-02-1677 | Debra       | Bennett    | Louis         | Hartman      | red          | jaw
+
+
+//Cypher Query Input
+MATCH (p:Patient {ssn: '883-02-1677'})-[r]-(b)
+RETURN type(r), p, b;
+
+//Cypher Query Output
+╒═══════════╤══════════════════════════════════════════════════════════════════════╤══════════════════════════════════════════════════════════════════════╕
+│"type(r)"  │"p"                                                                   │"b"                                                                   │
+╞═══════════╪══════════════════════════════════════════════════════════════════════╪══════════════════════════════════════════════════════════════════════╡
+│"Receives" │{"last_name":"Bennett","phone_number":"868-054-4369x161","first_name":│{"name":"jaw","description":"Much range realize fly candidate.","id":7│
+│           │"Debra","ssn":"883-02-1677"}                                          │12}                                                                   │
+├───────────┼──────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"Sick_with"│{"last_name":"Bennett","phone_number":"868-054-4369x161","first_name":│{"name":"red","description":"Class walk ball above vote off.","id":978│
+│           │"Debra","ssn":"883-02-1677"}                                          │}                                                                     │
+├───────────┼──────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"Sick_with"│{"last_name":"Bennett","phone_number":"868-054-4369x161","first_name":│{"name":"slice","description":"Job without effect accept car.","id":22│
+│           │"Debra","ssn":"883-02-1677"}                                          │4}                                                                    │
+├───────────┼──────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"Sick_with"│{"last_name":"Bennett","phone_number":"868-054-4369x161","first_name":│{"name":"copy","description":"Born customer look up.","id":453}       │
+│           │"Debra","ssn":"883-02-1677"}                                          │                                                                      │
+├───────────┼──────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"Treats"   │{"last_name":"Bennett","phone_number":"868-054-4369x161","first_name":│{"last_name":"Hartman","phone_number":"+1-605-410-0433x348","first_nam│
+│           │"Debra","ssn":"883-02-1677"}                                          │e":"Louis","ssn":"275-96-0868"}                                       │
+├───────────┼──────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────────┤
+│"Treats"   │{"last_name":"Bennett","phone_number":"868-054-4369x161","first_name":│{"last_name":"Long","phone_number":"289.557.4875x85879","first_name":"│
+│           │"Debra","ssn":"883-02-1677"}                                          │Cathy","ssn":"736-92-5321"}                                           │
+└───────────┴──────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────────┘
