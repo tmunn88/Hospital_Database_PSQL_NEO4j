@@ -1,0 +1,83 @@
+1. How many doctors are treating doctors?
+
+--identify doctors that are also patients and mark them as doctors
+--in their patient info
+
+MATCH (d: Doctor)
+MATCH (p:Patient)
+where d.ssn=p.ssn
+Set p.isdoctor=TRUE
+return p;
+
+--then just query that relationship specifying property isdoctor=True
+
+MATCH (d:Doctor)-[r:Treats]->(p:Patient)
+WHERE p.isdoctor=True
+RETURN Count(p.isdoctor);
+
+--output
++-------------------+
+| Count(p.isdoctor) |
++-------------------+
+| 57                |
++-------------------+
+
+2. What's the count of how many patients have each kind of illness?
+
+MATCH (p:Patient)-[s:Sick_with]->(i:Illness)
+Return Count(p) AS PatientswithIllness, i.name AS illness_name
+ORDER BY PatientswithIllness DESC;
+
+--Output; showing first 10 records for space reasons
++----------------------------------------------+
+| PatientswithIllness | illness_name           |
++----------------------------------------------+
+| 26                  | "Maxwell condition"    |
+| 26                  | "Crosby virus"         |
+| 24                  | "Lee virus"            |
+| 24                  | "Horton illness"       |
+| 23                  | "Nelson virus"         |
+| 22                  | "Lamb illness"         |
+| 21                  | "Hernandez condition"  |
+| 21                  | "Dixon disease"        |
+| 21                  | "Barber illness"       |
+| 21                  | "Jackson virus"        |
++----------------------------------------------+
+
+3. What's the doctor with the most patients?
+
+MATCH (d:Doctor)-[:Treats]->(p:Patient)
+WITH d, Count(p.ssn) AS patientCount
+WITH MAX(patientCount) as max
+MATCH (d:Doctor)-[:Treats]->(p:Patient)
+WITH d, COUNT(p.ssn) as patient_Count, max
+WHERE patient_Count = max
+RETURN d.ssn as doc_ssn, d.last_name as doc_last_name, patient_Count;
+
+--Output
++-----------------------------------------------+
+| doc_ssn       | doc_last_name | patient_Count |
++-----------------------------------------------+
+| "235-27-5347" | "Boyd"        | 178           |
++-----------------------------------------------+
+
+4. Which doctor is treating the largest number of unique illnesses?
+
+MATCH (d:Doctor)-[:Treats]->(p:Patient)
+MATCH (p:Patient)-[:Sick_with]->(i:Illness)
+WITH d, Count(DISTINCT(i.id)) AS illnessCount
+WITH MAX(illnessCount) as max_illness
+MATCH (d:Doctor)-[:Treats]->(p:Patient)
+MATCH (p:Patient)-[:Sick_with]->(i:Illness)
+WITH d, Count(DISTINCT(i.id)) as illness_Count, max_illness
+WHERE illness_Count = max_illness
+RETURN d.ssn as doc_ssn, d.last_name as doc_last_name, illness_Count;
+
+--output
++-----------------------------------------------+
+| doc_ssn       | doc_last_name | illness_Count |
++-----------------------------------------------+
+| "235-27-5347" | "Boyd"        | 221           |
++-----------------------------------------------+
+
+5. What illness is being treated with the largest number of unique treatments?
